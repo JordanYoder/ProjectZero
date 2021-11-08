@@ -7,6 +7,7 @@ import service.PhoneServiceImpl;
 import service.UserService;
 import service.UserServiceImpl;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -16,9 +17,7 @@ public class ShopMain {
     public static void main(String[] args) {
         Scanner userInput = new Scanner(System.in);
         UserService userService = new UserServiceImpl();
-
         int accountOption = 0;
-        boolean logout = false;
 
         while (accountOption == 0) {
             System.out.println("Would you like to sign in or create a new account?");
@@ -27,12 +26,14 @@ public class ShopMain {
             System.out.println("* 2) Create new account");
             System.out.println("*****************************************************************************************");
 
+            // Make sure we get an integer value
             if(userInput.hasNextInt() ) {
                 accountOption = userInput.nextInt();
             } else {
                 System.out.println("Please enter 1 or 2");
             }
 
+            // Log in
             switch (accountOption) {
                 case 1:
                     accountOption = 1;
@@ -49,15 +50,20 @@ public class ShopMain {
                     password = userInput.next();
 
                     System.out.println("*****************************************************************************************");
+
+                    // Capture credentials into user object
                     userLoginAttempt.setUserEmail(email);
                     userLoginAttempt.setUserPassword(password);
+
+                    // Take retrieved user information and store into a login
                     loggedInUser = userService.getUser(userLoginAttempt);
-                    System.out.println(loggedInUser.toString());
+
+                    // Determine what menu's user gets by logging.
                     String accountType = loggedInUser.getAccountType();
 
                     switch (accountType) {
                         case "customer":
-                            customerMenu();
+                            customerMenu(loggedInUser);
                             break;
                         case "employee":
                             employeeMenu();
@@ -109,10 +115,12 @@ public class ShopMain {
                     UserPojo successfullyAdd = userService.addCustomer(userPojo);
                     System.out.println("Successfully added " + successfullyAdd.getUserEmail());
                     break;
+
+                // Catch integers outside desired range
                 default:
                     System.out.println("Please select 1) for login or 2) to create a new account");
                     System.out.println();
-                    userInput.nextLine();   // Clears out 'cruft' like if a long string was entered
+                    userInput.nextLine();
                     accountOption = 0;
                     break;
             }
@@ -121,7 +129,7 @@ public class ShopMain {
     }
 
     // Customer user interface menu
-    public static void customerMenu() {
+    public static void customerMenu(UserPojo loggedInUser) {
         Scanner userInput = new Scanner(System.in);
         int menuChoice = 0;
         boolean logout = false;
@@ -139,6 +147,7 @@ public class ShopMain {
                 System.out.println("Please enter 1, 2, or 3");
             }
 
+            // View all items
             switch (menuChoice) {
                 case 1: menuChoice = 1;
                     PhoneService phoneService = new PhoneServiceImpl();
@@ -154,6 +163,24 @@ public class ShopMain {
                         System.out.println(i + "). " + itr.next().toString());
                         System.out.println("*************************************************************************");
                         i++;
+                    }
+
+                    // Does the user want to make an offer on any of these items
+                    System.out.println("Enter a number to make an offer on item or 0 to go back");
+
+                    // Make an offer on an item or go back to previous menu
+                    if(userInput.hasNextInt()) {
+                        menuChoice = userInput.nextInt();
+                        BigDecimal bid;
+                        if(menuChoice < i && i > 0) {
+                            System.out.println("What would you like to bid for current item: ");
+                            bid = userInput.nextBigDecimal();
+
+                        } else {
+                            System.out.println("Please enter a valid item or enter 0");
+                        }
+                    } else {
+                        System.out.println("Please enter a valid item or enter 0");
                     }
 
                     break;
